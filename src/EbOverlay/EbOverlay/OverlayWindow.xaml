@@ -10,30 +10,27 @@
         Topmost="True"
         IsHitTestVisible="False">
 
-    <!-- Root canvas — full screen, all zones positioned absolutely -->
+    <!-- Root canvas — full screen, all zones positioned in code-behind via PositionAllElements() -->
     <Canvas x:Name="RootCanvas">
 
-        <!-- [TOP-LEFT] App name placeholder — filled by AppNameZone in M2 -->
+        <!-- [TOP-LEFT] App name — filled by AppNameZone in M2 -->
         <TextBlock x:Name="AppNameText"
-                   Canvas.Left="24" Canvas.Top="20"
                    Foreground="#66FF99"
                    FontFamily="Courier New"
                    FontSize="13"
                    Opacity="0"
                    Text="—" />
 
-        <!-- [TOP-RIGHT] Clock placeholder — filled by ClockZone in M2 -->
+        <!-- [TOP-RIGHT] Clock — filled by ClockZone in M2 -->
         <TextBlock x:Name="ClockText"
-                   Canvas.Top="20"
                    Foreground="#66FF99"
                    FontFamily="Courier New"
                    FontSize="13"
                    Opacity="0.6"
                    Text="00:00" />
 
-        <!-- [BOT-RIGHT] System metrics placeholder — filled by MetricsZone in M3 -->
+        <!-- [BOT-RIGHT] System metrics — filled by MetricsZone in M3 -->
         <StackPanel x:Name="MetricsPanel"
-                    Canvas.Bottom="20"
                     Orientation="Vertical"
                     HorizontalAlignment="Right"
                     Opacity="0.5">
@@ -51,10 +48,8 @@
                        HorizontalAlignment="Right" />
         </StackPanel>
 
-        <!-- [BOT-LEFT] Network metrics placeholder — filled by NetworkMetrics in M3 -->
+        <!-- [BOT-LEFT] Network metrics — filled by NetworkMetrics in M3 -->
         <StackPanel x:Name="NetPanel"
-                    Canvas.Left="24"
-                    Canvas.Bottom="20"
                     Orientation="Vertical"
                     Opacity="0.5">
             <TextBlock x:Name="NetUpText"
@@ -71,7 +66,6 @@
 
         <!-- [MID-RIGHT] Sprite zone — filled by SpriteZone in M4 -->
         <Image x:Name="SpriteImage"
-               Canvas.Bottom="80"
                Width="96"
                Height="96"
                RenderOptions.BitmapScalingMode="NearestNeighbor"
