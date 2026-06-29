@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Interop;
 using System.Windows.Threading;
 using EbOverlay.Hooks;
+using EbOverlay.Zones;
 
 namespace EbOverlay;
 
@@ -11,6 +12,9 @@ public partial class OverlayWindow : Window
 {
     private readonly FullscreenDetector _fullscreenDetector;
     private readonly DispatcherTimer _fullscreenTimer;
+    private readonly WindowHook _windowHook;
+    private AppNameZone? _appNameZone;
+    private ClockZone? _clockZone;
 
     // Safe inset margins derived from WorkArea — respects taskbar on any edge
     private Thickness _safeArea;
@@ -20,11 +24,12 @@ public partial class OverlayWindow : Window
         InitializeComponent();
 
         _fullscreenDetector = new FullscreenDetector();
-        _fullscreenTimer = new DispatcherTimer
-        {
-            Interval = TimeSpan.FromSeconds(1)
-        };
+        _fullscreenTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
         _fullscreenTimer.Tick += OnFullscreenCheck;
+
+        _windowHook = new WindowHook();
+        _windowHook.ForegroundWindowChanged += hwnd =>
+            Dispatcher.Invoke(() => _appNameZone?.OnForegroundWindowChanged(hwnd));
 
         Loaded += OnLoaded;
 
@@ -44,6 +49,9 @@ public partial class OverlayWindow : Window
 
         var hwnd = new WindowInteropHelper(this).Handle;
         _fullscreenDetector.OwnHwnd = hwnd;
+
+        _appNameZone = new AppNameZone(AppNameText);
+        _clockZone   = new ClockZone(ClockText);
 
         _fullscreenTimer.Start();
     }
@@ -120,6 +128,7 @@ public partial class OverlayWindow : Window
     protected override void OnClosed(EventArgs e)
     {
         _fullscreenTimer.Stop();
+        _windowHook.Dispose();
         base.OnClosed(e);
     }
 }
