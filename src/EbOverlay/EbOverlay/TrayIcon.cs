@@ -6,13 +6,12 @@ namespace EbOverlay;
 
 /// <summary>
 /// System tray icon with right-click menu.
-/// Provides pause/resume and exit — the primary user control surface for the overlay.
+/// Pause state lives in OverlayWindow so the fullscreen timer can respect it.
 /// </summary>
 public sealed class TrayIcon : IDisposable
 {
     private readonly NotifyIcon _notify;
     private readonly OverlayWindow _overlay;
-    private bool _paused;
 
     public TrayIcon(OverlayWindow overlay)
     {
@@ -26,8 +25,6 @@ public sealed class TrayIcon : IDisposable
         };
 
         _notify.ContextMenuStrip = BuildMenu();
-
-        // Double-click tray icon = toggle pause, same as the menu item
         _notify.DoubleClick += (_, _) => TogglePause();
     }
 
@@ -37,7 +34,7 @@ public sealed class TrayIcon : IDisposable
 
         var header = new ToolStripLabel("EbOverlay")
         {
-            Font = new Font("Courier New", 9f, System.Drawing.FontStyle.Bold),
+            Font      = new Font("Courier New", 9f, System.Drawing.FontStyle.Bold),
             ForeColor = Color.FromArgb(0x66, 0xFF, 0x99),
         };
 
@@ -52,13 +49,21 @@ public sealed class TrayIcon : IDisposable
         fullscreenItem.CheckedChanged += (_, _) =>
             _overlay.FullscreenHideEnabled = fullscreenItem.Checked;
 
+        var spriteItem = new ToolStripMenuItem("Show sprite")
+        {
+            CheckOnClick = true,
+            Checked      = _overlay.SpriteVisible,
+        };
+        spriteItem.CheckedChanged += (_, _) =>
+            _overlay.Dispatcher.Invoke(() => _overlay.SpriteVisible = spriteItem.Checked);
+
+        // Keep menu labels in sync with actual state when opening
         menu.Opening += (_, _) =>
         {
-            pauseItem.Text          = _paused ? "Resume overlay" : "Pause overlay";
-            fullscreenItem.Checked  = _overlay.FullscreenHideEnabled;
+            pauseItem.Text         = _overlay.IsPaused ? "Resume overlay" : "Pause overlay";
+            fullscreenItem.Checked = _overlay.FullscreenHideEnabled;
+            spriteItem.Checked     = _overlay.SpriteVisible;
         };
-
-        var separator = new ToolStripSeparator();
 
 #if DEBUG
         var testIconsItem = new ToolStripMenuItem("Test status icons")
@@ -78,9 +83,11 @@ public sealed class TrayIcon : IDisposable
         };
 
         menu.Items.Add(header);
-        menu.Items.Add(separator);
+        menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(pauseItem);
+        menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(fullscreenItem);
+        menu.Items.Add(spriteItem);
 #if DEBUG
         menu.Items.Add(testIconsItem);
 #endif
@@ -92,16 +99,10 @@ public sealed class TrayIcon : IDisposable
 
     private void TogglePause()
     {
-        _paused = !_paused;
-        _overlay.Dispatcher.Invoke(() =>
-        {
-            _overlay.Visibility = _paused ? Visibility.Hidden : Visibility.Visible;
-        });
-        _notify.Text = _paused ? "EbOverlay — paused" : "EbOverlay";
+        _overlay.Dispatcher.Invoke(() => _overlay.SetPaused(!_overlay.IsPaused));
+        _notify.Text = _overlay.IsPaused ? "EbOverlay — paused" : "EbOverlay";
     }
 
-    // Generates a minimal colored icon at runtime so we don't need an .ico file yet.
-    // Replace with a real icon file in M6/M8 when assets are ready.
     private static Icon CreateFallbackIcon()
     {
         using var bmp = new Bitmap(16, 16);

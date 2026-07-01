@@ -25,10 +25,29 @@ public partial class OverlayWindow : Window
     private Thickness _safeArea;
 
     /// <summary>
+    /// When true the overlay is user-paused. OnFullscreenCheck will not override this.
+    /// </summary>
+    public bool IsPaused { get; private set; }
+
+    /// <summary>
     /// When false the fullscreen detector is bypassed — overlay stays visible over fullscreen apps.
-    /// Toggle from the tray menu for coding/browser workflows where game-compatibility isn't needed.
     /// </summary>
     public bool FullscreenHideEnabled { get; set; } = true;
+
+    /// <summary>
+    /// Show or hide the sprite character without affecting other overlay elements.
+    /// </summary>
+    public bool SpriteVisible
+    {
+        get => SpriteContainer.Visibility == Visibility.Visible;
+        set => SpriteContainer.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    public void SetPaused(bool paused)
+    {
+        IsPaused   = paused;
+        Visibility = paused ? Visibility.Hidden : Visibility.Visible;
+    }
 
     public OverlayWindow()
     {
@@ -170,6 +189,8 @@ public partial class OverlayWindow : Window
 
     private void OnFullscreenCheck(object? sender, EventArgs e)
     {
+        if (IsPaused) return;  // tray pause overrides everything
+
         if (!FullscreenHideEnabled)
         {
             Visibility = Visibility.Visible;

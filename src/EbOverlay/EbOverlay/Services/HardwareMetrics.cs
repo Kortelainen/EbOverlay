@@ -31,7 +31,6 @@ public sealed class HardwareMetrics : IDisposable
 #if DEBUG
         DumpSensors();
 #endif
-
         _timer = new Timer(_ => Poll(), null, TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(2));
     }
 
